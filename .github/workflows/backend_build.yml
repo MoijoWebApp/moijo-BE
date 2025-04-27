@@ -28,5 +28,5 @@ jobs:
             echo "spring.datasource.password=${{ secrets.DB_PASSWORD }}" >> ./src/main/resources/application-secret.properties
 
       - name: Gradle 빌드 및 테스트
-        run: ./gradlew build
+        run: ./gradlew build -Dspring.profiles.active=ci
 
