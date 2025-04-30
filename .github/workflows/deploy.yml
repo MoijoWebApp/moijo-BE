@@ -45,7 +45,9 @@ jobs:
             docker pull wnstlr1379/moijo-backend:latest
             docker stop moijo-backend || true
             docker rm moijo-backend || true
-            docker run -d --name moijo-backend -p 8080:8080 \
+            docker run -d --name moijo-backend \
+              --network moijo-net \
+              -p 8080:8080 \
               -e SPRING_DATASOURCE_URL=jdbc:mysql://moijo-mysql:3306/moijo_db \
               -e SPRING_DATASOURCE_USERNAME=root \
               -e SPRING_DATASOURCE_PASSWORD=Yjj6230936! \
