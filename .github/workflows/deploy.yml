@@ -1,0 +1,54 @@
+name: CI/CD with DockerHub & EC2
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Gradle 실행 권한 부여
+        run: chmod +x ./gradlew
+
+      - name: Build JAR
+        run: ./gradlew build -x test
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build & Push Docker Image
+        run: |
+          docker build -t wnstlr1379/moijo-backend:latest .
+          docker push wnstlr1379/moijo-backend:latest
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            docker pull wnstlr1379/moijo-backend:latest
+            docker stop moijo-backend || true
+            docker rm moijo-backend || true
+            docker run -d --name moijo-backend \
+              --network moijo-net \
+              -p 8080:8080 \
+              -e SPRING_DATASOURCE_URL=jdbc:mysql://moijo-mysql:3306/moijo_db \
+              -e SPRING_DATASOURCE_USERNAME=root \
+              -e SPRING_DATASOURCE_PASSWORD=Yjj6230936! \
+              wnstlr1379/moijo-backend:latest
